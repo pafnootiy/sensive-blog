@@ -4,8 +4,9 @@ from django.shortcuts import render
 from blog.models import Comment, Post, Tag
 
 
-def get_related_posts_count(tag):
-    return tag.posts.count()
+#
+# def get_related_posts_count(tag):
+#     return tag.posts.count()
 
 
 # def get_likes_count(post):
@@ -34,20 +35,17 @@ def serialize_tag(tag):
 
 
 def index(request):
+    most_popular_posts = Post.objects.annotate(
+        post_likes=Count("likes", distinct=True)).order_by("-post_likes")[:5]
 
-    most_popular_posts = Post.objects.annotate(likes_post =Count("likes", distinct=True)).order_by("-likes_post")[:5]
-
-    # print(popular_posts)
-    # popular_posts = sorted(posts, key=get_likes_count)
-    # print("что в popular_posts", popular_posts)
-    # most_popular_posts = popular_posts[-5:]  # TODO. Как это посчитать?
-    # print("что в most_popular_posts", most_popular_posts)
     fresh_posts = Post.objects.order_by('published_at')
     most_fresh_posts = list(fresh_posts)[-5:]
 
-    tags = Tag.objects.all()
-    popular_tags = sorted(tags, key=get_related_posts_count)
-    most_popular_tags = popular_tags[-5:]
+    most_popular_tags = Tag.objects.annotate(
+        post_tags=Count("title", distinct=True)).order_by("-post_tags")[:5]
+    # tags = Tag.objects.all()
+    # popular_tags = sorted(tags, key=get_related_posts_count)
+    # most_popular_tags = popular_tags[-5:]
 
     context = {
         'most_popular_posts': [
