@@ -95,7 +95,17 @@ def post_detail(request, slug):
 
     likes = post.likes.all()
 
-    related_tags = post.tags.all()
+    tags = Tag.objects.annotate(posts_count=Count("posts"))
+
+    most_popular_tags = tags.popular()[:5]
+
+    # related_tags = post.tags.all()
+
+    related_tags = Tag.objects.annotate(posts_count=Count("posts"))
+
+    print("what i have in related_tags",related_tags)
+    print("what i have in most_popular_tags",most_popular_tags)
+
  
 
     serialized_post = {
@@ -111,10 +121,10 @@ def post_detail(request, slug):
     }
 
 
-    popular_posts= Post.objects.popular().prefetch_related("author").fetch_with_comments_count()[:5]
+    most_popular_posts= Post.objects.popular().prefetch_related("author").fetch_with_comments_count()[:5]
 
 
-    most_popular_posts = popular_posts.annotate(posts_count=Count("posts"))
+    # most_popular_posts = popular_posts.annotate(posts_count=Count("posts"))
 
     tags = Tag.objects.annotate(posts_count=Count("posts"))
 
@@ -141,14 +151,17 @@ def tag_filter(request, tag_title):
     tag = Tag.objects.get(title=tag_title)
 
     tags = Tag.objects.annotate(posts_count=Count("posts"))
-
     most_popular_tags = tags.popular()[:5]
+
     most_popular_posts= Post.objects.popular().prefetch_related("author").fetch_with_comments_count()[:5]
-    # related_posts1 = tag.posts.all()[:20]
-    print("what i have in related_posts1",vars(most_popular_tags[0]))
-    related_posts=tag.posts.annotate(comments_count=Count('comments'))
-    # related_posts=posts.annotate(posts_count=Count("tags"))
-    # print("what i have in related_posts",related_posts)
+
+    related_posts = tag.posts.all()[:20]
+    # posts=tag.posts.annotate(comments_count=Count('comments'))[:20]
+    # related_posts=posts.annotate(posts_count=Count("posts"))
+    # print("what i have in related_posts1",vars(most_popular_tags[0]))
+    # related_posts=tag.posts.annotate(comments_count=Count('comments'))[:20]
+    # related_posts=tag.posts.annotate(posts_count=Count("tags"))
+    # print("what i have in related_posts",vars(related_posts[0]))
 
 
     context = {
