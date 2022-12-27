@@ -25,13 +25,13 @@ class PostQuerySet(models.QuerySet):
 
         posts_with_comments_count = list(self)
 
-        return posts_with_comments_count
+        return  posts_with_comments_count
 
 
 class TagQuerySet(models.QuerySet):
     def popular(self):
-        most_popular_tags = self.order_by("-posts_count")
-        return most_popular_tags
+ 
+        return  self.annotate(posts_count=Count('posts')).order_by('-posts_count')
 
 
 class Post(models.Model):

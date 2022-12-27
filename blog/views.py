@@ -19,10 +19,12 @@ def serialize_post(post):
         'teaser_text': post.text[:200],
         'author': post.author.username,
         'comments_amount': len(Comment.objects.filter(post=post)),
+        # 'comments_amount': post.comments_count,
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
-        'tags': [serialize_tag(tag) for tag in post.tags.all()],
+        'tags':  post.tags.all(),
+        # 'tags': [serialize_tag(tag) for tag in post.tags.all()],
         'first_tag_title': post.tags.all()[0].title,
     }
 
@@ -37,7 +39,7 @@ def serialize_post_optimized(post):
         'image_url': post.image.url if post.image else None,
         'published_at': post.published_at,
         'slug': post.slug,
-        'tags': [serialize_tag(tag) for tag in post.tags.all()],
+        'tags':   post.tags.all() ,
         'first_tag_title': post.tags.all()[0].title,
     }
 
@@ -60,25 +62,21 @@ def index(request):
 
     most_fresh_posts = list(fresh_posts)[-5:]
 
+    # tags = Tag.objects.annotate(posts_count=Count("posts"))
+    # most_popular_tags = tags.popular()[:5]
 
-    tags = Tag.objects.annotate(posts_count=Count("posts"))
 
-    most_popular_tags = tags.popular()[:5]
+    most_popular_tags = Tag.objects.popular()[:5]
     
     print("what i have in most_popular_tags post index",vars(most_popular_tags[0]))
     
     context = {
         'most_popular_posts': [
-            serialize_post_optimized(post) for post in most_popular_posts
-        ],
+            serialize_post_optimized(post) for post in most_popular_posts],
         'page_posts': [serialize_post_optimized(post) for post in most_fresh_posts],
         'popular_tags': [serialize_tag(tag) for tag in most_popular_tags],
     }
     return render(request, 'index.html', context)
-
-
-
-
 
 
 
@@ -96,15 +94,13 @@ def post_detail(request, slug):
     likes = post.likes.all()
 
     tags = Tag.objects.annotate(posts_count=Count("posts"))
-
     most_popular_tags = tags.popular()[:5]
 
-    # related_tags = post.tags.all()
-
-    related_tags = Tag.objects.annotate(posts_count=Count("posts"))
-
-    print("what i have in related_tags",related_tags)
-    print("what i have in most_popular_tags",most_popular_tags)
+    related_tags = tags.popular()
+    # related_tags = Tag.objects.annotate(posts_count=Count("posts"))
+# 
+    print("what i have in related_tags",vars(related_tags[0]))
+    # print("what i have in most_popular_tags",most_popular_tags)
 
  
 
@@ -122,20 +118,13 @@ def post_detail(request, slug):
 
 
     most_popular_posts= Post.objects.popular().prefetch_related("author").fetch_with_comments_count()[:5]
-
-
+    most_popular_tags = Tag.objects.popular()[:5]
     # most_popular_posts = popular_posts.annotate(posts_count=Count("posts"))
 
-    tags = Tag.objects.annotate(posts_count=Count("posts"))
-
-    most_popular_tags = tags.popular()[:5]
-
- 
+    # tags = Tag.objects.annotate(posts_count=Count("posts"))
     
 
     # print("what i have in most_popular_tags post detail",vars(most_popular_tags[0]))
-
-    
 
     context = {
         'post': serialized_post,
@@ -150,18 +139,25 @@ def post_detail(request, slug):
 def tag_filter(request, tag_title):
     tag = Tag.objects.get(title=tag_title)
 
-    tags = Tag.objects.annotate(posts_count=Count("posts"))
-    most_popular_tags = tags.popular()[:5]
-
     most_popular_posts= Post.objects.popular().prefetch_related("author").fetch_with_comments_count()[:5]
-
     related_posts = tag.posts.all()[:20]
+    most_popular_tags = Tag.objects.popular()[:5]
+
+
+    # related_posts = tag.posts.annotate(comments_count=Count('comments'))
+    # tags = Tag.objects.annotate(posts_count=Count("posts"))
+
+    # print("what i have in most_popular_tags",vars(most_popular_tags[0]))
+    # related_posts=tag.posts.annotate(comments_count=Count('comments'))[:20]
+    
     # posts=tag.posts.annotate(comments_count=Count('comments'))[:20]
     # related_posts=posts.annotate(posts_count=Count("posts"))
     # print("what i have in related_posts1",vars(most_popular_tags[0]))
-    # related_posts=tag.posts.annotate(comments_count=Count('comments'))[:20]
+    
     # related_posts=tag.posts.annotate(posts_count=Count("tags"))
     # print("what i have in related_posts",vars(related_posts[0]))
+
+
 
 
     context = {
